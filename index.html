@@ -702,7 +702,7 @@ document.querySelectorAll('.tab-btn').forEach(function(btn) {
 
 // ==================== PWA ====================
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js', { scope: '/' }).catch(function(err){ console.log('SW registration failed:', err); });
+  navigator.serviceWorker.register('sw.js', { scope: './' }).catch(function(err){ console.log('SW registration failed:', err); });
 }
 
 let deferredPrompt;

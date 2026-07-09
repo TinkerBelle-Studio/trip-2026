@@ -1,8 +1,8 @@
-const CACHE_NAME = 'trip-itinerary-v1';
+const CACHE_NAME = 'trip-itinerary-v2';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json'
+  './',
+  './index.html',
+  './manifest.json'
 ];
 
 self.addEventListener('install', function(event) {
@@ -54,7 +54,7 @@ self.addEventListener('fetch', function(event) {
         });
       })
       .catch(function() {
-        return caches.match('/index.html');
+        return caches.match('./index.html');
       })
   );
 });

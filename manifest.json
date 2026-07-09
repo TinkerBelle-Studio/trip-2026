@@ -2,8 +2,8 @@
   "name": "Japan + Korea Trip Itinerary",
   "short_name": "Trip Itinerary",
   "description": "Interactive day-by-day itinerary with Google Maps directions for Aug 30 – Sept 13 trip",
-  "start_url": "/index.html",
-  "scope": "/",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#0f0f11",
@@ -35,21 +35,6 @@
       "sizes": "540x720",
       "type": "image/svg+xml",
       "form_factor": "narrow"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Tokyo Days",
-      "short_name": "Tokyo",
-      "description": "Aug 30 – Sept 3 in Tokyo",
-      "url": "/index.html#tokyo",
-      "icons": [
-        {
-          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect fill='%233B7DD8' width='96' height='96'/><text x='48' y='48' font-size='48' font-family='system-ui' fill='white' text-anchor='middle' dominant-baseline='central'>🗾</text></svg>",
-          "sizes": "96x96",
-          "type": "image/svg+xml"
-        }
-      ]
     }
   ]
 }

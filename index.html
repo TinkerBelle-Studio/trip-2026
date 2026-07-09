@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="description" content="Interactive day-by-day itinerary with Google Maps directions for Aug 30 – Sept 13 Japan and Korea trip. Real-time shared expenses and reservations.">
+<meta name="theme-color" content="#3B7DD8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Trip Itinerary">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%233B7DD8' width='180' height='180' rx='40'/><text x='90' y='90' font-size='80' font-weight='700' font-family='system-ui' fill='white' text-anchor='middle' dominant-baseline='central'>✈</text></svg>">
+<link rel="manifest" href="manifest.json">
+<title>Japan + Korea Trip</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary:#3B7DD8;
+    --primary-dark:#2d5fa8;
+    --dark:#0f0f11;
+    --dark-panel:#1a1a1f;
+    --text:#ffffff;
+    --text-dim:#bfc0c6;
+    --line:rgba(255,255,255,0.1);
+    --success:#4ade80;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--dark);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  ::selection{background:var(--primary);color:var(--text);}
+  .app{max-width:1180px;margin:0 auto;padding:0 0 80px;}
+  header.hero{padding:44px 24px 26px;border-bottom:1px solid var(--line);position:relative;overflow:hidden;}
+  header.hero::before{content:"";position:absolute;top:-40px;right:-60px;width:280px;height:280px;border-radius:50%;
+    background:radial-gradient(circle at 30% 30%, var(--primary) 0%, transparent 70%);opacity:.25;}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--primary);margin-bottom:10px;}
+  h1{font-family:'Shippori Mincho',serif;font-weight:700;font-size:clamp(26px,5vw,44px);margin:0 0 8px;line-height:1.1;}
+  h1 .arrow{color:var(--primary);font-weight:500;}
+  .sub{color:var(--text-dim);font-size:14px;max-width:640px;line-height:1.55;}
+  .fbbadge{display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:10.5px;
+    text-transform:uppercase;letter-spacing:.08em;padding:4px 10px;border-radius:3px;margin-top:12px;}
+  .fbbadge.live{color:var(--success);border:1px solid rgba(74,173,128,.4);background:rgba(74,173,128,.08);}
+  .fbbadge.offline{color:#fbbf24;border:1px solid rgba(251,191,36,.4);background:rgba(251,191,36,.08);}
+  .tabs{display:flex;gap:0;border-bottom:1px solid var(--line);padding:0 24px;margin-bottom:0;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .tab-btn{font-family:'JetBrains Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:.08em;
+    background:transparent;border:0;color:var(--text-dim);padding:14px 18px;cursor:pointer;border-bottom:2px solid transparent;
+    transition:all .15s;margin-bottom:-1px;white-space:nowrap;}
+  .tab-btn:hover{color:var(--text);}
+  .tab-btn.active{color:var(--primary);border-bottom-color:var(--primary);}
+  .tab-content{display:none;}
+  .tab-content.active{display:block;}
+  .install-prompt{display:none;background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);
+    padding:16px 24px;margin:0 24px 20px;border-radius:6px;align-items:center;gap:16px;font-size:14px;}
+  .install-prompt.show{display:flex;}
+  .install-prompt button{background:var(--text);color:var(--primary);border:0;padding:8px 16px;border-radius:4px;
+    font-weight:600;cursor:pointer;font-size:13px;white-space:nowrap;}
+  .install-prompt button:hover{opacity:.9;}
+  .install-prompt .close{background:transparent;color:var(--text);padding:4px 8px;font-size:18px;line-height:1;}
+  .daybar{display:flex;gap:6px;overflow-x:auto;padding:16px 24px;border-bottom:1px solid var(--line);-webkit-overflow-scrolling:touch;}
+  .daypill{flex:0 0 auto;font-family:'JetBrains Mono',monospace;font-size:12px;padding:9px 13px;border-radius:3px;
+    border:1px solid var(--line);background:transparent;color:var(--text-dim);cursor:pointer;white-space:nowrap;text-align:left;transition:all .15s;}
+  .daypill .city{display:block;font-size:9.5px;opacity:.7;letter-spacing:.08em;text-transform:uppercase;margin-top:2px;}
+  .daypill:hover{border-color:var(--primary);color:var(--text);}
+  .daypill.active{background:var(--primary);border-color:var(--primary);color:var(--text);}
+  .daypill.transit{border-style:dashed;}
+  main{padding:26px 24px;}
+  .daytitle{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;}
+  .daytitle h2{font-family:'Shippori Mincho',serif;font-size:26px;margin:0;font-weight:700;}
+  .cityTag{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--dark);background:var(--primary);padding:4px 9px;border-radius:2px;}
+  .paceTag{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    padding:4px 9px;border-radius:2px;border:1px solid var(--primary);color:var(--primary);}
+  .daynote{color:var(--text-dim);font-size:13.5px;margin:10px 0 20px;max-width:700px;line-height:1.55;}
+  .openroute{
+    display:inline-flex;align-items:center;gap:8px;margin-bottom:22px;
+    background:var(--primary);color:var(--dark);font-weight:600;font-size:13.5px;
+    padding:10px 16px;border-radius:4px;text-decoration:none;font-family:'Inter',sans-serif;
+    transition:transform .1s;border:0;cursor:pointer;
+  }
+  .openroute:hover{transform:translateY(-1px);background:var(--primary-dark);}
+  .layout{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;}
+  @media(max-width:880px){.layout{grid-template-columns:1fr;}}
+  .mapwrap{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--dark-panel);position:sticky;top:16px;}
+  @media(max-width:880px){.mapwrap{position:static;}}
+  .mapwrap iframe{width:100%;height:430px;border:0;display:block;background:#333;}
+  .mapfallback{padding:10px 14px;font-size:11.5px;color:var(--text-dim);border-top:1px solid var(--line);line-height:1.45;}
+  .mapfallback a{color:var(--primary);}
+  .timeline{display:flex;flex-direction:column;gap:0;}
+  .slot{border:1px solid var(--line);border-radius:6px;padding:15px 17px;
+    background:linear-gradient(180deg,var(--dark-panel) 0%,rgba(61,125,216,.05) 100%);position:relative;}
+  .slot.freeblock{background:rgba(78,173,128,.08);border-style:dashed;}
+  .slot-head{display:flex;align-items:center;gap:9px;margin-bottom:5px;flex-wrap:wrap;}
+  .period{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
+    padding:3px 8px;border-radius:2px;background:var(--primary);color:var(--dark);font-weight:700;}
+  .period.midday{background:var(--success);}
+  .period.pm{background:#fb923c;color:var(--dark);}
+  .period.free{background:transparent;border:1px solid var(--success);color:var(--success);}
+  .time{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--text-dim);}
+  .slot h3{font-family:'Shippori Mincho',serif;font-size:17.5px;margin:2px 0 5px;font-weight:700;}
+  .kind{display:inline-block;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);
+    font-family:'JetBrains Mono',monospace;margin-bottom:7px;}
+  .desc{font-size:13.5px;line-height:1.55;color:#ddd;margin:0 0 10px;}
+  .meta{display:flex;gap:8px;flex-wrap:wrap;}
+  .chip{padding:4px 9px;border-radius:2px;border:1px solid var(--line);font-family:'JetBrains Mono',monospace;font-size:11.5px;}
+  .chip.cost{color:var(--primary);border-color:rgba(61,125,216,.4);}
+  .chip.res-yes{color:#fca5a5;border-color:rgba(248,113,113,.5);background:rgba(248,113,113,.08);}
+  .chip.res-no{color:var(--success);border-color:rgba(74,173,128,.4);}
+  .leg{
+    display:flex;align-items:center;gap:10px;padding:9px 6px 9px 24px;
+    font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--text-dim);
+    position:relative;
+  }
+  .leg::before{content:"";position:absolute;left:10px;top:0;bottom:0;width:1px;
+    background:repeating-linear-gradient(to bottom,var(--primary) 0 4px,transparent 4px 9px);opacity:.5;}
+  .leg .mode{color:var(--success);}
+  .leg a{color:var(--primary);text-decoration:none;margin-left:auto;white-space:nowrap;border:1px solid rgba(61,125,216,.4);
+    padding:3px 9px;border-radius:2px;font-size:10.5px;}
+  .leg a:hover{background:rgba(61,125,216,.12);}
+  .recs{margin-top:26px;}
+  .recs h4{font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--primary);margin:0 0 12px;}
+  .recgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:600px){.recgrid{grid-template-columns:1fr;}}
+  .reccard{border:1px solid var(--line);border-radius:6px;padding:13px 15px;background:rgba(61,125,216,.06);}
+  .reccard .mealtag{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.1em;
+    color:var(--success);margin-bottom:5px;display:block;}
+  .reccard h5{font-family:'Shippori Mincho',serif;font-size:15px;margin:0 0 4px;font-weight:700;}
+  .reccard p{font-size:12.5px;color:var(--text-dim);line-height:1.5;margin:0 0 8px;}
+  .reccard .row{display:flex;align-items:center;gap:10px;}
+  .reccard .cost{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--primary);}
+  .reccard a{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--primary);text-decoration:none;
+    border:1px solid rgba(61,125,216,.4);padding:3px 9px;border-radius:2px;margin-left:auto;}
+  .optactivity{border:1px solid var(--line);border-radius:6px;padding:15px 17px;background:rgba(61,125,216,.05);margin-bottom:16px;}
+  .optactivity h4{font-family:'Shippori Mincho',serif;font-size:17px;margin:0 0 5px;font-weight:700;}
+  .optactivity .type{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.1em;
+    color:var(--success);margin-bottom:8px;display:block;}
+  .optactivity p{font-size:13.5px;line-height:1.55;color:var(--text-dim);margin:0 0 10px;}
+  .optmeta{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;}
+  .optmeta span{display:flex;align-items:center;gap:5px;}
+  .optmeta strong{color:var(--primary);}
+  .form-group{margin-bottom:18px;}
+  .form-group label{display:block;font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.1em;
+    color:var(--primary);margin-bottom:6px;}
+  .form-group input,.form-group select,.form-group textarea{
+    width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:4px;background:var(--dark-panel);
+    color:var(--text);font-size:14px;font-family:'Inter',sans-serif;transition:border .15s;
+  }
+  .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:0;border-color:var(--primary);}
+  .checkbox-group{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;}
+  .checkbox-group label{margin:0;display:flex;align-items:center;gap:6px;cursor:pointer;font-family:'Inter',sans-serif;
+    font-size:13px;text-transform:none;letter-spacing:0;color:var(--text);}
+  .checkbox-group input[type="checkbox"]{margin:0;width:16px;height:16px;cursor:pointer;accent-color:var(--primary);}
+  .btn-primary{background:var(--primary);color:var(--dark);border:0;padding:10px 20px;border-radius:4px;font-weight:600;
+    cursor:pointer;font-size:13.5px;transition:background .15s;}
+  .btn-primary:hover{background:var(--primary-dark);}
+  .btn-danger{background:transparent;color:#f87171;border:1px solid rgba(248,113,113,.5);padding:4px 10px;border-radius:3px;
+    font-weight:600;cursor:pointer;font-size:11px;transition:all .15s;}
+  .btn-danger:hover{background:rgba(248,113,113,.08);}
+  .card{border:1px solid var(--line);border-radius:6px;padding:13px 15px;background:rgba(61,125,216,.05);
+    margin-bottom:12px;}
+  .settlement{border:1px solid var(--line);border-radius:6px;padding:16px 18px;background:rgba(61,125,216,.08);margin-bottom:14px;}
+  .settlement h4{font-family:'Shippori Mincho',serif;font-size:18px;margin:0 0 12px;font-weight:700;}
+  .settlement-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05);
+    font-size:14px;}
+  .settlement-row:last-child{border-bottom:none;}
+  .settlement-row .person{color:var(--text);}
+  .settlement-row .balance{font-family:'JetBrains Mono',monospace;font-weight:700;}
+  .settlement-row .balance.positive{color:var(--success);}
+  .settlement-row .balance.negative{color:#fca5a5;}
+  .settlesummary{border:2px solid var(--primary);border-radius:6px;padding:16px;background:rgba(61,125,216,.15);margin-top:20px;}
+  .settlesummary h4{font-family:'Shippori Mincho',serif;font-size:16px;margin:0 0 14px;font-weight:700;color:var(--primary);}
+  .settleitem{font-size:14px;line-height:1.7;color:var(--text);margin-bottom:8px;}
+  .settleitem strong{color:var(--primary);}
+  .settleitem:last-child{margin-bottom:0;}
+  .rescard{border:1px solid var(--line);border-radius:6px;padding:14px 16px;background:rgba(61,125,216,.05);margin-bottom:14px;display:flex;gap:14px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;}
+  .rescard .info{flex:1;min-width:200px;}
+  .rescard .name{font-family:'Shippori Mincho',serif;font-size:17px;font-weight:700;margin:0 0 6px;}
+  .rescard .meta{font-size:12px;color:var(--text-dim);line-height:1.6;margin:8px 0 0;}
+  .rescard .meta strong{color:var(--text);}
+  .resbadge{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;
+    letter-spacing:.08em;padding:4px 10px;border-radius:3px;border:1px solid var(--line);}
+  .resbadge.pending{color:#fbbf24;border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.08);}
+  .resbadge.notbooked{color:#f87171;border-color:rgba(248,113,113,.4);background:rgba(248,113,113,.08);}
+  .resbadge.confirmed{color:var(--success);border-color:rgba(74,173,128,.4);background:rgba(74,173,128,.08);}
+  .rescard .actions{display:flex;gap:8px;flex-shrink:0;}
+  .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.2);border-top-color:var(--primary);border-radius:50%;animation:spin .6s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .alert{padding:12px 14px;border-radius:4px;font-size:13px;margin-bottom:16px;line-height:1.5;}
+  .alert.warning{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);color:#fbbf24;}
+  .alert.error{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:#fca5a5;}
+  .alert.success{background:rgba(74,173,128,.1);border:1px solid rgba(74,173,128,.3);color:var(--success);}
+  @supports (padding: max(0px)) {
+    body { padding-left: max(0px, env(safe-area-inset-left)); padding-right: max(0px, env(safe-area-inset-right)); }
+    main { padding-bottom: max(80px, calc(20px + env(safe-area-inset-bottom))); }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="install-prompt" id="installPrompt">
+    <span>📱 Add to your home screen for offline access</span>
+    <button id="installBtn">Install</button>
+    <button class="close" id="closeInstall">✕</button>
+  </div>
+
+  <header class="hero">
+    <div class="eyebrow">Aug 30 — Sept 13 · 3 travelers · offline ready</div>
+    <h1>Tokyo <span class="arrow">→</span> Kyoto <span class="arrow">→</span> Osaka <span class="arrow">→</span> Seoul <span class="arrow">→</span> Busan</h1>
+    <div class="sub">Tap a day. The map shows that day's actual route via Google Maps. Every travel leg lists mode, time, and distance — tap <b>Directions</b> on any leg to launch live turn-by-turn in the Google Maps app. Days are paced with real free time built in.</div>
+    <div class="fbbadge offline" id="fbBadge">● Connecting...</div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="itinerary">Itinerary</button>
+    <button class="tab-btn" data-tab="optional">Optional Activities</button>
+    <button class="tab-btn" data-tab="reservations">Reservations</button>
+    <button class="tab-btn" data-tab="expenses">Expenses</button>
+  </div>
+
+  <div id="itinerary" class="tab-content active">
+    <div class="daybar" id="daybar"></div>
+
+    <main>
+      <div class="daytitle">
+        <h2 id="dTitle"></h2>
+        <span class="cityTag" id="dCity"></span>
+        <span class="paceTag" id="dPace"></span>
+      </div>
+      <div class="daynote" id="dNote"></div>
+      <a class="openroute" id="openRoute" href="#" target="_blank" rel="noopener">▶ Open full day route in Google Maps</a>
+
+      <div class="layout">
+        <div class="mapwrap">
+          <iframe id="gmap" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src=""></iframe>
+          <div class="mapfallback">Map not loading? You may be viewing this inside a restricted preview — open this file in a normal browser, or use the <b>Open full route</b> button above (works everywhere, including on your phone).</div>
+        </div>
+        <div class="timeline" id="timeline"></div>
+      </div>
+
+      <div class="recs">
+        <h4>Lunch &amp; dinner picks — go if the mood strikes</h4>
+        <div class="recgrid" id="recgrid"></div>
+      </div>
+    </main>
+  </div>
+
+  <div id="optional" class="tab-content">
+    <main>
+      <h2 style="font-family:'Shippori Mincho',serif;font-size:26px;margin:0 0 24px;">Optional Activities</h2>
+      <p style="color:var(--text-dim);margin:0 0 26px;max-width:700px;line-height:1.6;">Things not on your main itinerary but worth considering if you have the time, energy, or mood. Listed by city with suggested timing based on your built-in free blocks.</p>
+      
+      <div id="optionalList"></div>
+    </main>
+  </div>
+
+  <div id="reservations" class="tab-content">
+    <main>
+      <h2 style="font-family:'Shippori Mincho',serif;font-size:26px;margin:0 0 24px;">Reservations</h2>
+      <p style="color:var(--text-dim);margin:0 0 26px;max-width:700px;line-height:1.6;">Log all bookings here. Changes sync instantly across all phones.</p>
+
+      <div id="fbErrorRes" style="display:none;" class="alert error"></div>
+
+      <div style="border:1px solid var(--line);border-radius:6px;padding:20px;background:rgba(61,125,216,.05);margin-bottom:28px;">
+        <h3 style="font-family:'Shippori Mincho',serif;font-size:20px;margin:0 0 18px;">Add Reservation</h3>
+        
+        <div class="form-group">
+          <label for="resName">Reservation name (restaurant, activity, etc.)</label>
+          <input type="text" id="resName" placeholder="Gebang Sikdang, Shinkansen, etc.">
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div class="form-group">
+            <label for="resDate">Date</label>
+            <input type="date" id="resDate">
+          </div>
+          <div class="form-group">
+            <label for="resTime">Time (optional)</label>
+            <input type="time" id="resTime">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="resType">Type</label>
+          <select id="resType">
+            <option value="restaurant">Restaurant</option>
+            <option value="activity">Activity / Workshop</option>
+            <option value="transport">Transport</option>
+            <option value="hotel">Hotel</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="resStatus">Status</label>
+          <select id="resStatus">
+            <option value="confirmed">✓ Confirmed</option>
+            <option value="pending">Pending</option>
+            <option value="notbooked">Not Booked</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="resConfirm">Confirmation # (optional)</label>
+          <input type="text" id="resConfirm" placeholder="e.g., D392PF, GZK-123">
+        </div>
+
+        <div class="form-group">
+          <label for="resPlatform">Booked via (optional)</label>
+          <input type="text" id="resPlatform" placeholder="e.g., Viator, OMAKASEJE, Direct, SmartEX">
+        </div>
+
+        <div class="form-group">
+          <label for="resLink">Booking link (optional)</label>
+          <input type="url" id="resLink" placeholder="https://...">
+        </div>
+
+        <div class="form-group">
+          <label for="resNotes">Notes (optional)</label>
+          <textarea id="resNotes" rows="3" placeholder="Arrive early, password is 123, etc."></textarea>
+        </div>
+
+        <button class="btn-primary" id="addResBtn" style="width:100%;">Add Reservation</button>
+      </div>
+
+      <h3 style="font-family:'Shippori Mincho',serif;font-size:20px;margin:32px 0 18px;">All Reservations</h3>
+      <div id="resList"></div>
+    </main>
+  </div>
+
+  <div id="expenses" class="tab-content">
+    <main>
+      <h2 style="font-family:'Shippori Mincho',serif;font-size:26px;margin:0 0 24px;">Trip Expenses</h2>
+      <p style="color:var(--text-dim);margin:0 0 26px;max-width:700px;line-height:1.6;">Log expenses as you go. All changes sync instantly. Settlement calculated automatically.</p>
+
+      <div id="fbErrorExp" style="display:none;" class="alert error"></div>
+
+      <div style="border:1px solid var(--line);border-radius:6px;padding:20px;background:rgba(61,125,216,.05);margin-bottom:28px;">
+        <h3 style="font-family:'Shippori Mincho',serif;font-size:20px;margin:0 0 18px;">Add an Expense</h3>
+        
+        <div class="form-group">
+          <label for="expDate">Date</label>
+          <input type="date" id="expDate">
+        </div>
+
+        <div class="form-group">
+          <label for="expDesc">What was it?</label>
+          <input type="text" id="expDesc" placeholder="Dinner at Ramen Spot, Transport, etc.">
+        </div>
+
+        <div class="form-group">
+          <label for="expAmount">Total amount (USD)</label>
+          <input type="number" id="expAmount" placeholder="0.00" step="0.01" min="0">
+        </div>
+
+        <div class="form-group">
+          <label for="expCategory">Category</label>
+          <select id="expCategory">
+            <option value="meal">Meal</option>
+            <option value="transport">Transport</option>
+            <option value="activity">Activity / Workshop</option>
+            <option value="lodging">Lodging</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="expPayer">Who paid?</label>
+          <select id="expPayer">
+            <option value="Lyndsey">Lyndsey</option>
+            <option value="Jon">Jon</option>
+            <option value="Akelia">Akelia</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Who does this apply to?</label>
+          <div class="checkbox-group">
+            <label><input type="checkbox" value="Lyndsey" class="expSplit" checked> Lyndsey</label>
+            <label><input type="checkbox" value="Jon" class="expSplit" checked> Jon</label>
+            <label><input type="checkbox" value="Akelia" class="expSplit" checked> Akelia</label>
+          </div>
+        </div>
+
+        <button class="btn-primary" id="addExpBtn" style="width:100%;">Add Expense</button>
+      </div>
+
+      <h3 style="font-family:'Shippori Mincho',serif;font-size:20px;margin:32px 0 18px;">Expenses Logged</h3>
+      <div id="expensesList"></div>
+
+      <h3 style="font-family:'Shippori Mincho',serif;font-size:20px;margin:32px 0 18px;">Settlement Summary</h3>
+      <div id="settlementSummary"></div>
+    </main>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+
+<script>
+// ==================== FIREBASE SETUP ====================
+// IMPORTANT: Replace these with your Firebase config from console.firebase.google.com
+// See setup instructions at the bottom of the chat response.
+const firebaseConfig = {
+  apiKey: "AIzaSyCpAnRmIQmgsd5FPlnORvM1G5kuV0w9lCI",
+  authDomain: "trip-2026-15a6e.firebaseapp.com",
+  projectId: "trip-2026-15a6e",
+  storageBucket: "trip-2026-15a6e.firebasestorage.app",
+  messagingSenderId: "919932576273",
+  appId: "1:919932576273:web:885b777f1685493bd707b0"
+};
+
+let fbReady = false;
+let db = null;
+
+function initFirebase() {
+  if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+    document.getElementById('fbBadge').className = 'fbbadge offline';
+    document.getElementById('fbBadge').textContent = '● Setup required — see instructions';
+    document.getElementById('fbErrorExp').style.display = 'block';
+    document.getElementById('fbErrorExp').innerHTML = '<strong>Setup required:</strong> Firebase config is a placeholder. Paste your real config into index.html to enable cross-device sync. Expenses will not save until configured.';
+    document.getElementById('fbErrorRes').style.display = 'block';
+    document.getElementById('fbErrorRes').innerHTML = '<strong>Setup required:</strong> Firebase config is a placeholder. Paste your real config into index.html to enable cross-device sync. Reservations will not save until configured.';
+    return;
+  }
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    fbReady = true;
+    document.getElementById('fbBadge').className = 'fbbadge live';
+    document.getElementById('fbBadge').textContent = '● Live sync connected';
+    setupRealtimeListeners();
+  } catch (err) {
+    console.error("Firebase init error:", err);
+    document.getElementById('fbBadge').className = 'fbbadge offline';
+    document.getElementById('fbBadge').textContent = '● Connection failed';
+  }
+}
+
+// ==================== REALTIME DATA ====================
+let expenses = [];
+let reservations = [];
+const TRAVELERS = ['Lyndsey', 'Jon', 'Akelia'];
+
+function setupRealtimeListeners() {
+  if (!fbReady) return;
+
+  db.collection('trips').doc('japan-korea-2026').collection('expenses').onSnapshot(
+    function(snapshot) {
+      expenses = [];
+      snapshot.forEach(function(doc) {
+        expenses.push(Object.assign({ id: doc.id }, doc.data()));
+      });
+      expenses.sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
+      renderExpenses();
+      renderSettlement();
+    },
+    function(error) {
+      console.error('Expense listener error:', error);
+      document.getElementById('fbErrorExp').style.display = 'block';
+      document.getElementById('fbErrorExp').textContent = 'Could not load expenses: ' + error.message;
+    }
+  );
+
+  db.collection('trips').doc('japan-korea-2026').collection('reservations').onSnapshot(
+    function(snapshot) {
+      reservations = [];
+      snapshot.forEach(function(doc) {
+        reservations.push(Object.assign({ id: doc.id }, doc.data()));
+      });
+      reservations.sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
+      renderReservations();
+    },
+    function(error) {
+      console.error('Reservation listener error:', error);
+      document.getElementById('fbErrorRes').style.display = 'block';
+      document.getElementById('fbErrorRes').textContent = 'Could not load reservations: ' + error.message;
+    }
+  );
+}
+
+// ==================== EXPENSES ====================
+function addExpense() {
+  if (!fbReady) { alert('Firebase not configured yet — see setup instructions.'); return; }
+  const date = document.getElementById('expDate').value;
+  const desc = document.getElementById('expDesc').value;
+  const amount = parseFloat(document.getElementById('expAmount').value);
+  const category = document.getElementById('expCategory').value;
+  const payer = document.getElementById('expPayer').value;
+  const splitBoxes = document.querySelectorAll('.expSplit:checked');
+  const splitBetween = Array.from(splitBoxes).map(function(cb){ return cb.value; });
+
+  if (!date || !desc || !amount || splitBetween.length === 0) {
+    alert('Fill all fields and select at least one person');
+    return;
+  }
+
+  db.collection('trips').doc('japan-korea-2026').collection('expenses').add({
+    date: date, desc: desc, amount: amount, category: category, payer: payer, splitBetween: splitBetween,
+    createdAt: new Date().toISOString()
+  }).then(function() {
+    document.getElementById('expDate').value = '';
+    document.getElementById('expDesc').value = '';
+    document.getElementById('expAmount').value = '';
+    document.getElementById('expCategory').value = 'meal';
+    document.querySelectorAll('.expSplit').forEach(function(cb){ cb.checked = true; });
+  }).catch(function(err) {
+    alert('Error adding expense: ' + err.message);
+  });
+}
+
+function deleteExpense(id) {
+  if (!fbReady) return;
+  db.collection('trips').doc('japan-korea-2026').collection('expenses').doc(id).delete()
+    .catch(function(err){ alert('Error deleting: ' + err.message); });
+}
+
+function renderExpenses() {
+  const list = document.getElementById('expensesList');
+  list.innerHTML = '';
+
+  if (expenses.length === 0) {
+    list.innerHTML = '<p style="color:var(--text-dim);text-align:center;padding:30px 0;">No expenses logged yet. Add one above!</p>';
+    return;
+  }
+
+  expenses.forEach(function(exp) {
+    const perPerson = (exp.amount / exp.splitBetween.length).toFixed(2);
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">'+
+        '<div style="flex:1;">'+
+          '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;text-transform:uppercase;color:var(--text-dim);margin-bottom:5px;">'+exp.date+'</div>'+
+          '<div style="font-family:\'Shippori Mincho\',serif;font-size:16px;font-weight:700;margin:0 0 5px;">'+exp.desc+'</div>'+
+          '<div style="font-size:12px;color:var(--text-dim);line-height:1.45;">'+
+            '<strong>'+exp.payer+'</strong> paid · '+exp.splitBetween.join(', ')+' split<br>'+
+            '$'+perPerson+' per person'+
+          '</div>'+
+        '</div>'+
+        '<div style="text-align:right;">'+
+          '<div style="font-family:\'JetBrains Mono\',monospace;font-size:16px;font-weight:700;color:var(--primary);margin-bottom:8px;">$'+exp.amount.toFixed(2)+'</div>'+
+          '<button class="btn-danger" onclick="deleteExpense(\''+exp.id+'\')">Delete</button>'+
+        '</div>'+
+      '</div>';
+    list.appendChild(card);
+  });
+}
+
+function calculateBalances() {
+  const balances = {};
+  TRAVELERS.forEach(function(t){ balances[t] = 0; });
+
+  expenses.forEach(function(exp) {
+    const perPerson = exp.amount / exp.splitBetween.length;
+    balances[exp.payer] += exp.amount;
+    exp.splitBetween.forEach(function(person) {
+      balances[person] -= perPerson;
+    });
+  });
+
+  return balances;
+}
+
+function generateSettlements(balances) {
+  const settlements = [];
+  const sorted = Object.entries(Object.assign({}, balances)).sort(function(a,b){ return a[1]-b[1]; });
+
+  for (let i = 0; i < sorted.length; i++) {
+    while (Math.abs(sorted[i][1]) > 0.01) {
+      let debtor = sorted[i];
+      let creditor = null;
+      for (let j = sorted.length - 1; j > i; j--) {
+        if (sorted[j][1] > 0.01) { creditor = sorted[j]; break; }
+      }
+      if (!creditor) break;
+
+      const amount = Math.min(-debtor[1], creditor[1]);
+      debtor[1] += amount;
+      creditor[1] -= amount;
+
+      settlements.push({ from: debtor[0], to: creditor[0], amount: amount.toFixed(2) });
+    }
+  }
+  return settlements;
+}
+
+function renderSettlement() {
+  const container = document.getElementById('settlementSummary');
+
+  if (expenses.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-dim);text-align:center;padding:30px 0;">No expenses yet — settlement will appear here.</p>';
+    return;
+  }
+
+  const balances = calculateBalances();
+  const settlements = generateSettlements(balances);
+
+  let html = '<div class="settlement"><h4>Per-Person Balance</h4>';
+  TRAVELERS.forEach(function(person) {
+    const balance = balances[person];
+    const cls = balance > 0.01 ? 'positive' : (balance < -0.01 ? 'negative' : '');
+    const display = balance >= 0 ? '+$' + balance.toFixed(2) : '-$' + Math.abs(balance).toFixed(2);
+    html += '<div class="settlement-row"><span class="person">'+person+'</span><span class="balance '+cls+'">'+display+'</span></div>';
+  });
+  html += '</div>';
+
+  if (settlements.length > 0) {
+    html += '<div class="settlesummary"><h4>Who Owes Whom</h4>';
+    settlements.forEach(function(s) {
+      html += '<div class="settleitem"><strong>'+s.from+'</strong> pays <strong>'+s.to+'</strong> <strong>$'+s.amount+'</strong></div>';
+    });
+    html += '</div>';
+  } else {
+    html += '<p style="color:var(--success);text-align:center;padding:20px;border:1px solid rgba(74,173,128,.4);border-radius:6px;margin-top:20px;">✓ All settled! Everyone is even.</p>';
+  }
+
+  container.innerHTML = html;
+}
+
+// ==================== RESERVATIONS ====================
+function addReservation() {
+  if (!fbReady) { alert('Firebase not configured yet — see setup instructions.'); return; }
+  const name = document.getElementById('resName').value;
+  const date = document.getElementById('resDate').value;
+  const time = document.getElementById('resTime').value;
+  const type = document.getElementById('resType').value;
+  const status = document.getElementById('resStatus').value;
+  const confirm_ = document.getElementById('resConfirm').value;
+  const platform = document.getElementById('resPlatform').value;
+  const link = document.getElementById('resLink').value;
+  const notes = document.getElementById('resNotes').value;
+
+  if (!name || !date) { alert('Name and date are required'); return; }
+
+  db.collection('trips').doc('japan-korea-2026').collection('reservations').add({
+    name: name, date: date, time: time, type: type, status: status,
+    confirm: confirm_, platform: platform, link: link, notes: notes,
+    createdAt: new Date().toISOString()
+  }).then(function() {
+    document.getElementById('resName').value = '';
+    document.getElementById('resDate').value = '';
+    document.getElementById('resTime').value = '';
+    document.getElementById('resType').value = 'restaurant';
+    document.getElementById('resStatus').value = 'confirmed';
+    document.getElementById('resConfirm').value = '';
+    document.getElementById('resPlatform').value = '';
+    document.getElementById('resLink').value = '';
+    document.getElementById('resNotes').value = '';
+  }).catch(function(err){ alert('Error: ' + err.message); });
+}
+
+function deleteReservation(id) {
+  if (!fbReady) return;
+  db.collection('trips').doc('japan-korea-2026').collection('reservations').doc(id).delete()
+    .catch(function(err){ alert('Error deleting: ' + err.message); });
+}
+
+function renderReservations() {
+  const list = document.getElementById('resList');
+  list.innerHTML = '';
+
+  if (reservations.length === 0) {
+    list.innerHTML = '<p style="color:var(--text-dim);text-align:center;padding:30px 0;">No reservations logged yet.</p>';
+    return;
+  }
+
+  reservations.forEach(function(res) {
+    const badgeClass = res.status === 'confirmed' ? 'confirmed' : (res.status === 'pending' ? 'pending' : 'notbooked');
+    let timeStr = res.time ? ' · ' + res.time : '';
+    let linkHtml = res.link ? '<a href="'+res.link+'" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:none;border:1px solid rgba(61,125,216,.4);padding:5px 10px;border-radius:3px;font-size:11px;">Open Link ↗</a>' : '';
+
+    const card = document.createElement('div');
+    card.className = 'rescard';
+    card.innerHTML =
+      '<div class="info">'+
+        '<div class="name">'+res.name+'</div>'+
+        '<span class="resbadge '+badgeClass+'">'+res.status.toUpperCase()+'</span>'+
+        '<div class="meta">'+
+          '<strong>'+res.date+'</strong>'+timeStr+' · '+res.type+
+          (res.platform ? '<br><strong>Via:</strong> '+res.platform : '')+
+          (res.confirm ? '<br><strong>Conf#:</strong> '+res.confirm : '')+
+          (res.notes ? '<br><strong>Notes:</strong> '+res.notes : '')+
+        '</div>'+
+      '</div>'+
+      '<div class="actions">'+
+        linkHtml+
+        '<button class="btn-danger" onclick="deleteReservation(\''+res.id+'\')">Delete</button>'+
+      '</div>';
+    list.appendChild(card);
+  });
+}
+
+// ==================== TAB SWITCHING ====================
+document.querySelectorAll('.tab-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+    document.querySelectorAll('.tab-content').forEach(function(c){ c.classList.remove('active'); });
+    this.classList.add('active');
+    const tabId = this.getAttribute('data-tab');
+    document.getElementById(tabId).classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+});
+
+// ==================== PWA ====================
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js', { scope: '/' }).catch(function(err){ console.log('SW registration failed:', err); });
+}
+
+let deferredPrompt;
+const installPrompt=document.getElementById('installPrompt');
+const installBtn=document.getElementById('installBtn');
+const closeInstall=document.getElementById('closeInstall');
+
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  deferredPrompt = e;
+  installPrompt.classList.add('show');
+});
+
+installBtn.addEventListener('click', function() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function(choiceResult) {
+      if (choiceResult.outcome === 'accepted') { deferredPrompt = null; }
+    });
+  }
+});
+
+closeInstall.addEventListener('click', function() {
+  installPrompt.classList.remove('show');
+});
+
+window.addEventListener('appinstalled', function() {
+  installPrompt.classList.remove('show');
+  deferredPrompt = null;
+});
+
+// ==================== FULL TRIP ITINERARY DATA ====================
+const HOTEL_TOKYO=[35.691246,139.69126], HOTEL_KYOTO=[35.0089652,135.7739053],
+      HOTEL_OSAKA=[34.6954318,135.5005214], HOTEL_SEOUL=[37.5113385,127.0585858],
+      HOTEL_BUSAN=[35.1601338,129.1646875];
+
+const DAYS = [
+{ date:"Aug 30", dow:"Sun", city:"Tokyo", pace:"Easy", transit:false,
+  note:"Arrival day — land Haneda ~12pm, get to the hotel, rest, and keep the evening simple. Jet lag is real; don't fight it.",
+  slots:[
+    {p:"MIDDAY", t:"~1:30pm", title:"Hyatt Regency Tokyo", kind:"Hotel · Nishi-Shinjuku", desc:"Check in, shower, nap if needed. Airport→hotel: Keikyu Line + JR or a ~45min taxi.", cost:"Booked", res:false, loc:HOTEL_TOKYO},
+    {p:"FREE", t:"3–6pm", title:"Rest / neighborhood wander", kind:"Recovery block", desc:"No plans on purpose. Shinjuku is right there whenever you're ready.", cost:"—", res:null, loc:null},
+    {p:"PM", t:"6:30pm", title:"Omoide Yokocho", kind:"Dinner · lantern-lit yakitori alley", desc:"Tiny izakaya counters shoulder-to-shoulder. Point at skewers, eat, sleep well.", cost:"~$15–25/pp", res:false, loc:[35.6927011,139.6995778]}
+  ],
+  legs:[{from:0,to:2,mode:"Walk",time:"12 min",dist:"0.9 km"}],
+  recs:[
+    {meal:"Dinner alt", name:"Ichiran Ramen (Shinjuku)", note:"Solo-booth tonkotsu, zero effort after a long flight.", cost:"~$12–15", loc:[35.6938,139.7034]}
+  ]},
+{ date:"Aug 31", dow:"Mon", city:"Tokyo", pace:"Full", transit:false,
+  note:"The Asakusa day — temple, wagyu, and the chopstick workshop are all within a 10-minute walk of each other. One subway ride out, everything clusters, evening free.",
+  slots:[
+    {p:"AM", t:"9:00am", title:"Senso-ji Temple", kind:"Temple · Asakusa", desc:"Tokyo's oldest temple — giant red lantern gate, Nakamise market street. Early = fewer tour groups.", cost:"Free", res:false, loc:[35.7147651,139.7966553]},
+    {p:"MIDDAY", t:"12:00pm", title:"Kuroge Wagyu Ichinoya", kind:"Lunch · wagyu counter", desc:"A5 wagyu rice patties and skewers, right by the temple.", cost:"~$25–35/pp", res:false, loc:[35.7128959,139.7961582]},
+    {p:"PM", t:"2:00pm", title:"Chopstick Making Workshop", kind:"Hands-on craft · ~1.5hr", desc:"Shape your own pair from raw wood with a Japanese hand plane. Engraving available. Everyone leaves with a usable souvenir.", cost:"~$25/pp", res:true, loc:[35.7108426,139.7955875]},
+    {p:"FREE", t:"4pm on", title:"Free evening", kind:"Open", desc:"Linger in Asakusa (Kappabashi kitchen street is nearby) or head back and rest.", cost:"—", res:null, loc:null}
+  ],
+  legs:[{from:0,to:1,mode:"Walk",time:"4 min",dist:"0.3 km"},{from:1,to:2,mode:"Walk",time:"9 min",dist:"0.7 km"}],
+  recs:[
+    {meal:"Lunch alt", name:"Daikokuya Tempura", note:"Century-old tempura-don institution near the temple.", cost:"~$15", loc:[35.7134,139.7947]},
+    {meal:"Dinner", name:"Sometaro Okonomiyaki", note:"Cook-your-own savory pancakes at low tatami tables — fun group dinner if you stay in Asakusa.", cost:"~$15–20", loc:[35.7112,139.7907]}
+  ]},
+{ date:"Sept 1", dow:"Tue", city:"Tokyo", pace:"Easy", transit:false,
+  note:"Akihabara morning for electronics + anime, burger lunch, then the whole afternoon and evening free. Deliberate breather day.",
+  slots:[
+    {p:"AM", t:"10:00am", title:"Akihabara", kind:"Electronics + anime district", desc:"Animate (anime goods, multiple floors), Tokyo Hobby Center, retro game shops, gachapon halls. Wander at will.", cost:"Browse free", res:false, loc:[35.7004944,139.7717427]},
+    {p:"MIDDAY", t:"1:00pm", title:"American Diner Andra", kind:"Lunch · smash burgers", desc:"Sizzling-skillet cheeseburgers — a fun break from Japanese food. 15min walk from Akihabara.", cost:"~$15–20/pp", res:false, loc:[35.7136331,139.7813983]},
+    {p:"FREE", t:"2:30pm on", title:"Free afternoon + evening", kind:"Open", desc:"Extend Akihabara, wander Ueno Park next door, or just recover. Dinner wherever you land.", cost:"—", res:null, loc:null}
+  ],
+  legs:[{from:0,to:1,mode:"Walk",time:"15 min",dist:"1.1 km"}],
+  recs:[
+    {meal:"Lunch alt", name:"Kanda Matsuya (soba)", note:"Historic soba house between Akihabara and Kanda, if noodles beat burgers.", cost:"~$10", loc:[35.6964,139.7671]},
+    {meal:"Dinner", name:"Ameyoko stalls (Ueno)", note:"Open-air market street — yakitori, seafood, kebabs, very casual.", cost:"~$15–25", loc:[35.7098,139.7745]}
+  ]},
+{ date:"Sept 2", dow:"Wed", city:"Tokyo", pace:"Easy", transit:false,
+  note:"Shinjuku shopping morning — everything is walkable from the hotel. Afternoon free, gyukatsu dinner is the only fixed point.",
+  slots:[
+    {p:"AM", t:"10:30am", title:"Isetan → Yodobashi → Don Quijote", kind:"Shopping loop · all walkable", desc:"Isetan's basement food hall for snacks/gifts, Yodobashi's electronics floors, Don Quijote for chaotic cheap everything. Pick your battles.", cost:"Browse free", res:false, loc:[35.691574,139.7046466]},
+    {p:"FREE", t:"1:30–6pm", title:"Free afternoon", kind:"Open", desc:"Drop bags at the hotel, rest, or keep shopping. Tokyo Metropolitan Gov't Building's free observation deck is 8min from the hotel if you want a skyline view.", cost:"—", res:null, loc:null},
+    {p:"PM", t:"7:00pm", title:"GYUKATSU Katsugyu", kind:"Dinner · fried beef cutlet · Yotsuya", desc:"Rare-fried beef katsu you finish yourself on a hot stone. Short subway hop from Shinjuku.", cost:"~$18–25/pp", res:false, loc:[35.6877936,139.7206426]}
+  ],
+  legs:[{from:0,to:2,mode:"Subway (Marunouchi Line)",time:"~12 min",dist:"2.6 km"}],
+  recs:[
+    {meal:"Lunch", name:"Isetan depachika bento", note:"Grab-and-go from the food hall mid-shopping — endless variety.", cost:"~$10–15", loc:[35.691574,139.7046466]},
+    {meal:"Dinner alt", name:"Genki Sushi (Shinjuku)", note:"Tablet-order conveyor sushi if you want fast and easy instead.", cost:"~$15–20", loc:[35.6918,139.7025]}
+  ]},
+{ date:"Sept 3", dow:"Thu", city:"Tokyo → Kyoto", pace:"Transit", transit:true,
+  note:"Michelin lunch, custom pillow fitting at Tokyo Station, bullet train, done. Nothing planned in Kyoto tonight except ramen.",
+  slots:[
+    {p:"AM", t:"11:30am", title:"Shinjuku Kappo Nakajima", kind:"Michelin 1★ lunch · sardine kappo", desc:"The famous ¥800 starred lunch. Small basement counter — arrive right at opening.", cost:"~¥800 ($5.50)/pp", res:true, loc:[35.6902024,139.7040013]},
+    {p:"MIDDAY", t:"1:30pm", title:"Nishikawa Pillow Fitting", kind:"Custom pillow · Daimaru dept store, Tokyo Station", desc:"~30–60min fitting for a personalized neck pillow — measured, tested, adjusted. Directly above the Shinkansen platforms.", cost:"Pillow price varies", res:false, loc:[35.6817646,139.7689006]},
+    {p:"PM", t:"3:30pm", title:"Shinkansen Hikari → Kyoto", kind:"Bullet train · reserved seats", desc:"~2h15m. Check into Dhawa Yura on arrival, then ramen nearby.", cost:"~$88–92/pp", res:true, loc:[35.6812996,139.7670658]}
+  ],
+  legs:[{from:0,to:1,mode:"Subway (Marunouchi Line)",time:"~18 min",dist:"6.5 km"},{from:1,to:2,mode:"Walk (same complex)",time:"3 min",dist:"0.2 km"}],
+  recs:[
+    {meal:"Dinner", name:"Ramen Sen-no-Kaze (Kyoto)", note:"Creamy-broth ramen 10min from the hotel — writes names on a wait sheet, worth it.", cost:"~$10–15", loc:[35.0046099,135.7676172]},
+    {meal:"Dinner alt", name:"Kyoto Station Ramen Koji", note:"A floor of regional ramen shops inside the station if you want zero-effort arrival dinner.", cost:"~$10–12", loc:[34.985849,135.7587667]}
+  ]},
+{ date:"Sept 4", dow:"Fri", city:"Kyoto", pace:"Full", transit:false,
+  note:"The big Kyoto sights day: torii gates at sunrise-ish, bamboo at midday, then a real break before gyoza dinner. Front-loaded on purpose so the afternoon breathes.",
+  slots:[
+    {p:"AM", t:"7:30am", title:"Fushimi Inari Taisha", kind:"Shrine · thousands of torii gates", desc:"THE Kyoto image. Go at 7:30 and the lower gates are yours; by 11am it's a conveyor belt. Climb as far as you feel like — the crowds thin the higher you go.", cost:"Free", res:false, loc:[34.9676945,135.7791876]},
+    {p:"MIDDAY", t:"11:30am", title:"Arashiyama Bamboo Forest", kind:"Scenic walk + lunch in the area", desc:"Towering bamboo grove, riverside town around it. Lunch at a soba spot here (see picks below).", cost:"Free", res:false, loc:[35.0168187,135.6713013]},
+    {p:"FREE", t:"2:30–6:30pm", title:"Free late afternoon", kind:"Open", desc:"Head back, rest, or wander Gion near the hotel. Feet will thank you.", cost:"—", res:null, loc:null},
+    {p:"PM", t:"7:00pm", title:"Chao Chao Gyoza", kind:"Dinner · Shijo Kawaramachi", desc:"Crispy mini-gyoza flights — get the Chao Chao combo, and yes, the chocolate dessert gyoza.", cost:"~$15–20/pp", res:false, loc:[35.0028401,135.7694824]}
+  ],
+  legs:[{from:0,to:1,mode:"Train (JR Inari→Kyoto→Saga-Arashiyama)",time:"~40 min",dist:"14 km"},{from:1,to:3,mode:"Train (Hankyu) + walk",time:"~35 min",dist:"9 km"}],
+  recs:[
+    {meal:"Lunch", name:"Arashiyama Yoshimura (soba)", note:"Handmade soba with a river view, right by the bamboo grove.", cost:"~$12–15", loc:[35.0135,135.6779]},
+    {meal:"Dinner alt", name:"Nishiki Market graze", note:"Kyoto's kitchen — skewers, tofu donuts, pickles. Stalls close ~6pm, so this works as a late-afternoon snack crawl instead.", cost:"~$10–20", loc:[35.005,135.7649]}
+  ]},
+{ date:"Sept 5", dow:"Sat", city:"Kyoto", pace:"Full", transit:false,
+  note:"Kaiseki lunch downtown, then north to Sakyo-ku: Akelia forges her knife at 2:30 while you two hit Shisen-dō temple and Ichijoji's ramen row five minutes away. Slow morning first.",
+  slots:[
+    {p:"AM", t:"10:00am", title:"KAI Cutlery + slow morning", kind:"Knife shopping · downtown", desc:"Buy finished blades here — the ones you don't have to hammer yourself. Easy start to the day.", cost:"Varies", res:false, loc:[35.0046099,135.7676172]},
+    {p:"MIDDAY", t:"11:30am", title:"Kikunoi Roan", kind:"Michelin kaiseki lunch · near Gion", desc:"Multi-course seasonal kaiseki from the famed Kikunoi family — the affordable way into Kyoto's top-tier cuisine.", cost:"~¥4,500 ($31)/pp", res:true, loc:[35.0034513,135.7706684]},
+    {p:"PM", t:"2:30pm", title:"Knife Forging (Akelia) · Shisen-dō (you two)", kind:"Studio NIN, Sakyo-ku · ~2.5–3hr", desc:"Akelia hammers, grinds, and sharpens her own blade. Shisen-dō — a quiet garden temple — is a 5min walk from the studio, and Ichijoji's famous ramen street is right there too.", cost:"~$150–165 (Akelia only)", res:true, loc:[35.0553531,135.7983297]},
+    {p:"FREE", t:"6pm on", title:"Free evening", kind:"Open", desc:"Casual dinner — Ichijoji ramen before heading back, or something near the hotel.", cost:"—", res:null, loc:null}
+  ],
+  legs:[{from:0,to:1,mode:"Walk",time:"6 min",dist:"0.45 km"},{from:1,to:2,mode:"Taxi (fastest) or bus",time:"~25 min taxi / ~45 min transit",dist:"7 km"}],
+  recs:[
+    {meal:"Dinner", name:"Ramen Ōkura (Ichijoji)", note:"Local shoyu ramen on the famous Ichijoji strip, minutes from the knife studio.", cost:"~$8–10", loc:[35.0426575,135.7832307]},
+    {meal:"Dinner alt", name:"Hikiniku to Come", note:"Table-grilled hamburg steak courses back near the hotel — reserve same-morning online.", cost:"~$15–20", loc:[35.0050975,135.7745747]}
+  ]},
+{ date:"Sept 6", dow:"Sun", city:"Kyoto → Osaka", pace:"Easy", transit:true,
+  note:"Lazy morning, 45-minute local train, then Osaka's one job: Dotonbori. Eat your way down the canal.",
+  slots:[
+    {p:"AM", t:"10:30am", title:"JR Special Rapid → Osaka", kind:"Local train · no reservation", desc:"Tap in with your IC card at Kyoto Station. 45 minutes, trains every 15.", cost:"~¥580 ($4)/pp", res:false, loc:[34.985849,135.7587667]},
+    {p:"MIDDAY", t:"12:00pm", title:"Candeo Hotels Osaka The Tower", kind:"Hotel · Umeda", desc:"Check in, drop bags. Rooftop sky-spa onsen on-site — worth an hour before dinner.", cost:"Booked", res:false, loc:HOTEL_OSAKA},
+    {p:"PM", t:"5:00pm", title:"Dotonbori + Kitan Hibiki", kind:"Neon canal walk + wagyu dinner", desc:"Glico sign, takoyaki stands, the whole circus — then wagyu steak/burgers at Kitan Hibiki in the middle of it.", cost:"~$25–35/pp", res:false, loc:[34.6680359,135.502638]}
+  ],
+  legs:[{from:0,to:1,mode:"Walk from Osaka Stn",time:"10 min",dist:"0.8 km"},{from:1,to:2,mode:"Subway (Midosuji Line)",time:"~12 min",dist:"3.5 km"}],
+  recs:[
+    {meal:"Lunch", name:"Takoyaki (Dotonbori stands)", note:"Wanaka or Kukuru — molten octopus balls, the mandatory Osaka snack.", cost:"~$5–8", loc:[34.6686,135.5031]},
+    {meal:"Dinner alt", name:"Chibo Okonomiyaki", note:"Osaka-style savory pancake griddled in front of you, same strip.", cost:"~$15–20", loc:[34.6687,135.5023]}
+  ]},
+{ date:"Sept 7", dow:"Mon", city:"Osaka → Seoul", pace:"Transit", transit:true,
+  note:"Travel day. Airport by 10am, land Seoul mid-afternoon, easy night in Gangnam — the mall is literally under the hotel.",
+  slots:[
+    {p:"AM", t:"9:30am", title:"Head to KIX", kind:"Airport transfer", desc:"Haruka express or airport bus from Umeda, ~50–60min. Buffer built in for a 12:35 departure.", cost:"~$10–15/pp", res:false, loc:[34.4319994,135.2366019]},
+    {p:"MIDDAY", t:"12:35pm", title:"KE724 → Seoul Incheon", kind:"Flight · confirmed (D392PF)", desc:"Lands 2:25pm. AREX express or taxi into Gangnam, ~70–90min.", cost:"Booked", res:null, loc:null},
+    {p:"PM", t:"~5:30pm", title:"Oakwood Premier Coex", kind:"Hotel · Gangnam", desc:"Check in, then dinner downstairs — Coex Mall connects underground, dozens of options without going outside.", cost:"Booked", res:false, loc:HOTEL_SEOUL}
+  ],
+  legs:[],
+  recs:[
+    {meal:"Dinner", name:"Coex Mall food floor", note:"Everything from bibimbap to katsu right under the hotel — perfect zero-energy travel-day dinner.", cost:"~$12–18", loc:HOTEL_SEOUL},
+    {meal:"Dinner alt", name:"Haidilao (Coex)", note:"In the mall, open very late — hot pot if you land hungry.", cost:"~$25–30", loc:HOTEL_SEOUL}
+  ]},
+{ date:"Sept 8", dow:"Tue", city:"Seoul", pace:"Full", transit:false,
+  note:"Palace + hanok village back-to-back (they're adjacent — no doubling back), then your confirmed Michelin crab lunch in Gangnam, then done for the day. The hotel is 15 minutes from the restaurant.",
+  slots:[
+    {p:"AM", t:"9:00am", title:"Gyeongbokgung Palace", kind:"Joseon royal palace", desc:"Main palace of the dynasty. Guard-changing ceremony at 10am at the main gate. Rent a hanbok nearby and entry is free.", cost:"₩3,000 ($2.20)/pp", res:false, loc:[37.579617,126.977041]},
+    {p:"AM", t:"11:00am", title:"Bukchon Hanok Village", kind:"Historic hillside neighborhood", desc:"Traditional hanok houses on the slope between the two palaces — a 12min walk from Gyeongbokgung's east gate.", cost:"Free", res:false, loc:[37.5826,126.9831]},
+    {p:"MIDDAY", t:"1:00pm", title:"Gebang Sikdang ✓", kind:"Michelin 1★ lunch · Gangnam · CONFIRMED", desc:"Soy-marinated raw crab (ganjang gejang) — mix the roe into rice in the shell at the end. Your reservation is locked.", cost:"₩45–60k ($32–43)/pp", res:"confirmed", loc:[37.5172952,127.0394411]},
+    {p:"FREE", t:"3pm on", title:"Free afternoon + evening", kind:"Open", desc:"You're already in Gangnam, 15min from the hotel. Rest, Coex aquarium, or Garosu-gil boutiques nearby.", cost:"—", res:null, loc:null}
+  ],
+  legs:[{from:0,to:1,mode:"Walk",time:"12 min",dist:"0.9 km"},{from:1,to:2,mode:"Subway (Line 3, Anguk→Sinsa) + walk",time:"~35 min",dist:"9 km"}],
+  recs:[
+    {meal:"Dinner", name:"Bongeunsa-area Korean BBQ", note:"Plenty of samgyeopsal spots within a 10min walk of the hotel — walk in, no booking.", cost:"~$25–35", loc:HOTEL_SEOUL},
+    {meal:"Dinner alt", name:"Coex food floor round 2", note:"If the crab lunch ran big, keep dinner light downstairs.", cost:"~$12–18", loc:HOTEL_SEOUL}
+  ]},
+{ date:"Sept 9", dow:"Wed", city:"Seoul", pace:"Full", transit:false,
+  note:"Secret Garden in the morning (timed entry — book this one ahead), long free middle, then Namsan at sunset and speakeasy fried chicken in Itaewon.",
+  slots:[
+    {p:"AM", t:"10:00am", title:"Changdeokgung + Secret Garden", kind:"UNESCO palace + royal garden", desc:"The prettier, quieter palace. Secret Garden requires a timed guided slot — reserve online in advance, it sells out.", cost:"₩8,000 ($6)/pp", res:true, loc:[37.5821721,126.9931659]},
+    {p:"FREE", t:"12:30–4:30pm", title:"Lunch + free afternoon", kind:"Open", desc:"Tosokchon samgyetang (ginseng chicken) nearby, or Insadong tea streets. Then rest before the evening.", cost:"~$15 lunch", res:false, loc:null},
+    {p:"PM", t:"5:00pm", title:"N Seoul Tower at sunset", kind:"Namsan cable car + observatory", desc:"Cable car up, catch golden hour over the whole city. Locks fence, cafes at the base of the tower.", cost:"₩21,000 ($15)/pp incl. cable car", res:false, loc:[37.5511694,126.9882266]},
+    {p:"PM", t:"7:30pm", title:"Kyochon Pilbang", kind:"Dinner · speakeasy fried chicken · Itaewon", desc:"Enter by pulling a giant paintbrush. Sauce brushed on tableside. Reserve if you can — walk-in waits run ~15–30min.", cost:"~$20/pp", res:"recommended", loc:[37.5340714,126.9938508]}
+  ],
+  legs:[{from:0,to:2,mode:"Subway + cable car",time:"~35 min",dist:"6 km"},{from:2,to:3,mode:"Taxi (down Namsan)",time:"~15 min",dist:"4 km"}],
+  recs:[
+    {meal:"Lunch", name:"Tosokchon Samgyetang", note:"Whole young chicken stuffed with rice + ginseng in broth — near the palaces.", cost:"~$15", loc:[37.5773,126.9717]},
+    {meal:"Dinner alt", name:"Itaewon main strip", note:"Global food row right around Kyochon if the wait's long.", cost:"~$15–20", loc:[37.5344,126.9942]}
+  ]},
+{ date:"Sept 10", dow:"Thu", city:"Seoul", pace:"Easy", transit:false,
+  note:"Free morning by design. Gwangjang market crawl for a late lunch, seafood boil dinner in Jamsil. That's the whole day.",
+  slots:[
+    {p:"FREE", t:"Morning", title:"Sleep in / laundry / flex", kind:"Recovery block", desc:"Day 12 of travel — take the morning. The hotel has laundry in-room.", cost:"—", res:null, loc:null},
+    {p:"MIDDAY", t:"1:00pm", title:"Gwangjang Market", kind:"Street food crawl", desc:"Bindaetteok (mung bean pancakes), mayak gimbap, tteokbokki, yukhoe if you're brave. Point, pay, eat standing.", cost:"~$10–15/pp grazing", res:false, loc:[37.5700398,126.9996036]},
+    {p:"PM", t:"6:00pm", title:"Show Me The Crab (Jamsil)", kind:"Dinner · Cajun seafood boil", desc:"Crab and shrimp boils, cracked and prepped for you at the table. Book ahead — it fills.", cost:"~$25–35/pp", res:true, loc:[37.5092276,127.1059623]}
+  ],
+  legs:[{from:1,to:2,mode:"Subway (Line 2)",time:"~30 min",dist:"11 km"}],
+  recs:[
+    {meal:"Lunch alt", name:"Myeongdong Kyoja", note:"Legendary four-item menu: kalguksu noodles + dumplings. Bib Gourmand, fast-moving line.", cost:"~$10", loc:[37.5626,126.9855]},
+    {meal:"Dinner alt", name:"Jamsil / Lotte World Mall floor", note:"Next to the crab spot — backup if plans shift.", cost:"~$15–20", loc:[37.5133,127.1028]}
+  ]},
+{ date:"Sept 11", dow:"Fri", city:"Seoul → Busan", pace:"Transit", transit:true,
+  note:"SRT from Suseo — 3 subway stops from the hotel, no transfer. Beach town by late afternoon.",
+  slots:[
+    {p:"AM", t:"Until 11:30am", title:"Pack + last Coex errands", kind:"Open", desc:"Anything you forgot to buy, the mall has it.", cost:"—", res:null, loc:HOTEL_SEOUL},
+    {p:"MIDDAY", t:"12:30pm", title:"SRT Suseo → Busan", kind:"High-speed rail · reserved", desc:"~2h40m. Bongeunsa Stn (5min walk from hotel) → Line 9 → Suseo, ~20min door to platform.", cost:"₩52,600 ($38)/pp", res:true, loc:[37.485544,127.10438]},
+    {p:"PM", t:"4:30pm", title:"Paradise Hotel + Haeundae Market", kind:"Beachfront check-in + market dinner", desc:"Hotel sits right on Haeundae Beach. The market street is a 3min walk — hotteok, eomuk, grilled seafood.", cost:"~$10–15/pp dinner", res:false, loc:HOTEL_BUSAN}
+  ],
+  legs:[{from:0,to:1,mode:"Subway (Line 9 from Bongeunsa)",time:"~20 min",dist:"7 km"},{from:1,to:2,mode:"SRT + Busan metro/taxi",time:"~3h 20m total",dist:"390 km"}],
+  recs:[
+    {meal:"Lunch", name:"Suseo Station gimbap-to-go", note:"Grab rolls for the train — Korean rail picnic is the move.", cost:"~$8", loc:[37.485544,127.10438]},
+    {meal:"Dinner alt", name:"Haeundae grilled eel alley", note:"Sit-down option inside the same market if street grazing isn't enough.", cost:"~$20–25", loc:[35.1614537,129.1622489]}
+  ]},
+{ date:"Sept 12", dow:"Sat", city:"Busan", pace:"Full", transit:false,
+  note:"Busan's two signature sights, then fresh seafood picked live off the tanks. This day covers a lot of ground — taxis between the big hops are cheap here and worth it.",
+  slots:[
+    {p:"AM", t:"8:30am", title:"Haedong Yonggungsa Temple", kind:"Oceanside temple · Gijang", desc:"One of Korea's only coastal temples — waves crash on the rocks right below the halls. Early beats both crowds and heat.", cost:"Free", res:false, loc:[35.1884543,129.2231109]},
+    {p:"MIDDAY", t:"12:00pm", title:"Gamcheon Culture Village", kind:"Painted hillside village", desc:"Pastel houses stacked up the hill, murals and the Little Prince overlook. Snack lunch from village hotteok stands, grab the ₩2,000 stamp map.", cost:"Free–₩2,000/pp", res:false, loc:[35.0973904,129.0105924]},
+    {p:"FREE", t:"3–6pm", title:"Free block", kind:"Open", desc:"Nampo-dong / BIFF Square is 15min away for street food and shopping, or head back for beach time.", cost:"—", res:null, loc:null},
+    {p:"PM", t:"6:30pm", title:"Jagalchi Market", kind:"Dinner · pick-your-fish seafood hall", desc:"Choose live seafood at the first-floor tanks, they cook it upstairs and serve it to your table. King crab, snow crab, eel — vendor will guide portions.", cost:"~$20–30/pp", res:false, loc:[35.0966339,129.0307965]}
+  ],
+  legs:[{from:0,to:1,mode:"Taxi (fastest across town)",time:"~45 min",dist:"28 km"},{from:1,to:3,mode:"Bus or taxi",time:"~15 min",dist:"3.5 km"}],
+  recs:[
+    {meal:"Lunch", name:"Gamcheon hotteok + cafes", note:"Sweet stuffed pancakes and hillside coffee inside the village.", cost:"~$5–10", loc:[35.0973904,129.0105924]},
+    {meal:"Dinner alt", name:"BIFF Square stalls (Nampo-dong)", note:"Ssiat hotteok's birthplace — dessert-crawl backup near Jagalchi.", cost:"~$10–15", loc:[35.0988,129.0287]}
+  ]},
+{ date:"Sept 13", dow:"Sun", city:"Busan → Home", pace:"Transit", transit:true,
+  note:"4:30pm flight = real morning available. One easy coastal walk, then the airport.",
+  slots:[
+    {p:"AM", t:"9:00am", title:"Songdo Cloud Trails", kind:"Coastal boardwalk", desc:"Glass-bottom skywalk over the water, optional cable car across the bay. Free, breezy, a good last look at Korea.", cost:"Free (cable car ~$13 optional)", res:false, loc:[35.0759423,129.0215731]},
+    {p:"MIDDAY", t:"1:00pm", title:"Head to Gimhae Airport", kind:"Airport transfer", desc:"~30min taxi from Songdo. Airport is small and efficient — 2hr buffer is plenty.", cost:"~$15 taxi", res:false, loc:[35.1728688,128.9471783]},
+    {p:"PM", t:"4:30pm", title:"KE1410 → home", kind:"Flight · PUS→ICN→SLC→PHX", desc:"Lands Phoenix 6:24pm the same calendar day. Welcome back.", cost:"Booked", res:null, loc:null}
+  ],
+  legs:[{from:0,to:1,mode:"Taxi",time:"~30 min",dist:"14 km"}],
+  recs:[
+    {meal:"Lunch", name:"Songdo seafood row or Busan Stn food hall", note:"Last proper Korean meal before airport food takes over.", cost:"~$10–15", loc:[35.0759423,129.0215731]},
+    {meal:"Dinner", name:"— on the flight", note:"Two meal services on the trans-Pacific leg.", cost:"—", loc:null}
+  ]}
+];
+
+const OPTIONAL_ACTIVITIES = [
+  {city:"Tokyo", activities:[
+    {name:"Meiji Shrine", type:"Shrine + forest walk", desc:"Serene forested shrine in Shibuya, spiritual counterpoint to busy Tokyo. Easy subway hop from Shinjuku.", when:"Sept 1–2 free afternoons, ~2 hrs", cost:"Free", loc:[35.676,139.7013]},
+    {name:"Shibuya Crossing + observation", type:"Urban spectacle", desc:"World's busiest intersection. Get a view from Starbucks overlooking or cross yourself. 5 min from Shibuya Station.", when:"Sept 2 afternoon free block", cost:"Free (coffee ~$6)", loc:[35.6595,139.7004]},
+    {name:"Tsukiji Outer Market", type:"Seafood market + breakfast", desc:"Sushi breakfast, tamagoyaki (sweet egg), sea urchin. Small family stalls. Go before 11am.", when:"Sept 1 early morning instead of Akihabara, or Sept 2 breakfast", cost:"~$15–25/pp breakfast", loc:[35.6654,139.7747]},
+    {name:"Takeshita Street", type:"Fashion + crowds", desc:"Narrow shopping street in Harajuku, packed with crepe stands and teen fashion. Intense sensory experience.", when:"Sept 2 afternoon free block, 1–2 hrs", cost:"Free to browse", loc:[35.6651,139.7014]},
+    {name:"Teamlab Borderless (or Planets)", type:"Digital art museum", desc:"Immersive teamlab exhibits, gorgeous Instagram-heavy experience. Book ahead, reserve 2–3 hrs.", when:"Replace Akihabara (Sept 1) or Shinjuku shopping (Sept 2)", cost:"~₩3,300-3,800 ($28-32)/pp", loc:[35.6295,139.6614]}
+  ]},
+  {city:"Kyoto", activities:[
+    {name:"Philosopher's Path", type:"Canal-side walk", desc:"Scenic cherry-tree-lined path, less crowded than bamboo forest. Connects Ginkaku-ji and Nanzenji temples.", when:"Sept 4 afternoon free block, ~1.5 hrs walk", cost:"Free", loc:[35.0389,135.8008]},
+    {name:"Kiyomizu-dera Temple", type:"Historic temple + views", desc:"Clifftop temple with wood-platform views over the city. Totally different vibe from the mountain shrines. ~1 hr.", when:"Sept 5 morning, or Sept 4 afternoon", cost:"~¥1,500 (~$10)", loc:[34.9948,135.7858]},
+    {name:"Gion evening stroll", type:"Geisha district walk", desc:"Traditional wooden machiya houses, spotting geishas heading to appointments. Moody, atmospheric. 5 min from your hotel.", when:"Sept 4 or 5 early evening, ~1 hr walk", cost:"Free", loc:[35.0050975,135.7745747]},
+    {name:"Koyasan cable car + temple stay", type:"Mountain monastery (optional stay)", desc:"Mountain-top Buddhist monastery. Day visitor hours. 1hr from Kyoto, but feels like another world.", when:"Sept 4 full day (skip Arashiyama) or Sept 5 alt plan", cost:"~¥1,000 entry (~$7), can eat/sleep if interested", loc:[34.2037,135.5944]}
+  ]},
+  {city:"Osaka", activities:[
+    {name:"Osaka Castle", type:"Historic castle", desc:"Massive reconstructed castle overlooking the city. Hike the grounds, take in the skyline. ~2 hrs.", when:"Sept 6 afternoon (instead of or before Dotonbori), or on arrival morning", cost:"~¥1,500 (~$10)", loc:[34.6872,135.5262]},
+    {name:"Shinsekai District", type:"Neon nostalgia + street food", desc:"Old-school Tokyo vibes, fried kushikatsu (deep-fried skewers), vintage arcades. Rundown-chic energy.", when:"Sept 6 afternoon, 1–2 hrs before dinner", cost:"~$15–25/pp (skewers)", loc:[34.6548,135.5007]}
+  ]},
+  {city:"Seoul", activities:[
+    {name:"Myeongdong Shopping", type:"Fashion + street food", desc:"Main shopping district, neon-packed, Korean beauty brands, street tteokbokki. Busiest, most touristy spot.", when:"Sept 9 afternoon free block, or Sept 10 morning instead of sleeping in", cost:"Free to browse", loc:[37.5626,126.9855]},
+    {name:"Hongdae Neighborhood", type:"Murals + indie cafes + nightlife", desc:"Younger, artsy vibe. Street art, indie bookstores, live jazz bars. 30 min from your hotel.", when:"Sept 10 free afternoon, or Sept 9 lunch time", cost:"Free to explore", loc:[37.5471,126.9249]},
+    {name:"Han River Parks (Yeouido or Seokchon)", type:"Green space + picnic", desc:"Bike paths, rowing, Han River views, street food vendors. Way more chill than shopping districts.", when:"Sept 10 morning or Sept 9 free afternoon, 1–2 hrs", cost:"~$8–10 food, rentals ~$10", loc:[37.5263,126.9244]},
+    {name:"Namsan hiking (lower trail)", type:"Urban nature hike", desc:"Easier than the full ridge. Views without the cable car surcharge. 45 min.", when:"Sept 9 or 10 morning, pairs with coffee", cost:"Free", loc:[37.5475,126.9754]},
+    {name:"Korean Folk Museum", type:"Cultural museum", desc:"Palace inside the same grounds as Gyeongbokgung. Traditional Korean life, handicrafts, performances.", when:"Sept 8 morning (extend palace visit), ~1–2 hrs", cost:"~₩4,000 (~$3)", loc:[37.5809,126.9766]},
+    {name:"Insadong Tea Streets", type:"Antique alleys + traditional tea", desc:"Quiet, winding alley of antique shops, art galleries, traditional tea rooms. Opposite energy from Myeongdong.", when:"Sept 9 free afternoon (lunch time)", cost:"~$8–15 tea + pastry", loc:[37.5700,126.9916]}
+  ]},
+  {city:"Busan", activities:[
+    {name:"Beomeosa Temple", type:"Mountain temple hike", desc:"Thousand-year-old mountain temple, remote and serene. ~45 min hike from parking, or rope car option.", when:"Sept 12 morning (before Haedong temple, or skip one)", cost:"Free (rope car ~₩5,000 / $3.50)", loc:[35.2392,129.0562]},
+    {name:"Taejongdae Park", type:"Coastal cliff walk + lighthouse", desc:"Dramatic coastal cliffs, cable car rides, lighthouse. Better weather guarantee than the misty Songdo.", when:"Sept 13 AM or Sept 12 afternoon", cost:"~₩2,500 ($2) entry + optional cable car", loc:[35.0729,129.1010]},
+    {name:"BIFF Square (Nampo-dong)", type:"Food + street culture + cinema", desc:"Pedestrian mall where Busan International Film Festival happens. Ssiat hotteok, fish cakes, energy.", when:"Sept 12 afternoon free block, or Sept 13 morning", cost:"~$10–15 food", loc:[35.0988,129.0287]},
+    {name:"Shinsegae Centum City", type:"Massive shopping mall", desc:"One of the world's largest malls. Modern, clean, every brand. Opposite of street food vibe.", when:"Sept 13 AM or Sept 12 free afternoon", cost:"Free to browse", loc:[35.1721,129.1181]}
+  ]}
+];
+
+let currentIdx = 0;
+
+function pc(p){ if(p==="MIDDAY")return "midday"; if(p==="PM")return "pm"; if(p==="FREE")return "free"; return ""; }
+
+function gLink(from,to){
+  return "https://www.google.com/maps/dir/?api=1&origin="+from[0]+","+from[1]+"&destination="+to[0]+","+to[1]+"&travelmode=transit";
+}
+function gMulti(locs){
+  return "https://www.google.com/maps/dir/" + locs.map(function(l){return l[0]+","+l[1];}).join("/");
+}
+function gPlace(loc){
+  return "https://www.google.com/maps/search/?api=1&query="+loc[0]+","+loc[1];
+}
+function gEmbed(locs){
+  if(locs.length===0) return "";
+  if(locs.length===1) return "https://maps.google.com/maps?q="+locs[0][0]+","+locs[0][1]+"&z=14&output=embed";
+  const saddr = locs[0][0]+","+locs[0][1];
+  const rest = locs.slice(1).map(function(l){return l[0]+","+l[1];});
+  const daddr = rest.join("+to:");
+  return "https://maps.google.com/maps?saddr="+saddr+"&daddr="+daddr+"&dirflg=r&output=embed";
+}
+
+function renderDaybar(){
+  const bar=document.getElementById('daybar'); bar.innerHTML='';
+  DAYS.forEach(function(d,i){
+    const b=document.createElement('button');
+    b.className='daypill'+(i===currentIdx?' active':'')+(d.transit?' transit':'');
+    b.innerHTML=d.date+'<span class="city">'+d.city+'</span>';
+    b.onclick=function(){currentIdx=i;render();window.scrollTo({top:0,behavior:'smooth'});};
+    bar.appendChild(b);
+  });
+}
+
+function renderOptional(){
+  const list=document.getElementById('optionalList'); list.innerHTML='';
+  OPTIONAL_ACTIVITIES.forEach(function(section){
+    const city=document.createElement('h3');
+    city.style.fontFamily="'Shippori Mincho',serif";
+    city.style.fontSize="22px";
+    city.style.marginTop="32px";
+    city.style.marginBottom="16px";
+    city.textContent=section.city;
+    list.appendChild(city);
+    section.activities.forEach(function(act){
+      const el=document.createElement('div');
+      el.className='optactivity';
+      let mapLink = act.loc ? '<a target="_blank" rel="noopener" href="'+gPlace(act.loc)+'" style="color:var(--primary);text-decoration:none;white-space:nowrap;">📍 Map</a>' : '';
+      el.innerHTML='<h4>'+act.name+'</h4>'+
+        '<span class="type">'+act.type+'</span>'+
+        '<p>'+act.desc+'</p>'+
+        '<div class="optmeta">'+
+          '<span><strong>When:</strong> '+act.when+'</span>'+
+          '<span><strong>Cost:</strong> '+act.cost+'</span>'+
+          mapLink+
+        '</div>';
+      list.appendChild(el);
+    });
+  });
+}
+
+function render(){
+  renderDaybar();
+  const d=DAYS[currentIdx];
+  document.getElementById('dTitle').textContent=d.date+' ('+d.dow+')';
+  document.getElementById('dCity').textContent=d.city;
+  document.getElementById('dPace').textContent=d.pace+' pace';
+  document.getElementById('dNote').textContent=d.note;
+
+  const locs=d.slots.filter(function(s){return s.loc;}).map(function(s){return s.loc;});
+  const or_=document.getElementById('openRoute');
+  if(locs.length>1){ or_.style.display='inline-flex'; or_.href=gMulti(locs); }
+  else if(locs.length===1){ or_.style.display='inline-flex'; or_.href=gPlace(locs[0]); or_.textContent='▶ Open location in Google Maps'; }
+  else { or_.style.display='none'; }
+  if(locs.length>1){ or_.textContent='▶ Open full day route in Google Maps'; }
+
+  document.getElementById('gmap').src=gEmbed(locs);
+
+  const tl=document.getElementById('timeline'); tl.innerHTML='';
+  d.slots.forEach(function(s,i){
+    const el=document.createElement('div');
+    el.className='slot'+(s.p==='FREE'?' freeblock':'');
+    let res='';
+    if(s.res===true)res='<span class="chip res-yes">Reservation required</span>';
+    else if(s.res==="recommended")res='<span class="chip res-yes">Reservation recommended</span>';
+    else if(s.res==="confirmed")res='<span class="chip res-yes">✓ Reservation confirmed</span>';
+    else if(s.res===false)res='<span class="chip res-no">No reservation needed</span>';
+    let nav = s.loc ? ' <a class="chip" style="text-decoration:none;color:#3B7DD8;border-color:rgba(61,125,216,.4)" target="_blank" rel="noopener" href="'+gPlace(s.loc)+'">📍 Map</a>' : '';
+    el.innerHTML='<div class="slot-head"><span class="period '+pc(s.p)+'">'+s.p+'</span><span class="time">'+s.t+'</span></div>'+
+      '<h3>'+s.title+'</h3><div class="kind">'+s.kind+'</div><p class="desc">'+s.desc+'</p>'+
+      '<div class="meta"><span class="chip cost">'+s.cost+'</span>'+res+nav+'</div>';
+    tl.appendChild(el);
+
+    (d.legs||[]).forEach(function(L){
+      if(L.from===i){
+        const fromLoc=d.slots[L.from].loc, toLoc=d.slots[L.to].loc;
+        const lg=document.createElement('div');
+        lg.className='leg';
+        let dirA = (fromLoc&&toLoc)? '<a target="_blank" rel="noopener" href="'+gLink(fromLoc,toLoc)+'">Directions ↗</a>' : '';
+        lg.innerHTML='↓ <span class="mode">'+L.mode+'</span> · '+L.time+' · '+L.dist+' '+dirA;
+        tl.appendChild(lg);
+      }
+    });
+  });
+
+  const rg=document.getElementById('recgrid'); rg.innerHTML='';
+  (d.recs||[]).forEach(function(r){
+    const c=document.createElement('div'); c.className='reccard';
+    let mapA = r.loc ? '<a target="_blank" rel="noopener" href="'+gPlace(r.loc)+'">📍</a>' : '';
+    c.innerHTML='<span class="mealtag">'+r.meal+'</span><h5>'+r.name+'</h5><p>'+r.note+'</p>'+
+      '<div class="row"><span class="cost">'+r.cost+'</span>'+mapA+'</div>';
+    rg.appendChild(c);
+  });
+}
+
+render();
+renderOptional();
+
+// ==================== INIT ====================
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('addExpBtn').addEventListener('click', addExpense);
+  document.getElementById('addResBtn').addEventListener('click', addReservation);
+
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('expDate').value = today;
+  document.getElementById('resDate').value = today;
+
+  initFirebase();
+});
+</script>
+</body>
+</html>
